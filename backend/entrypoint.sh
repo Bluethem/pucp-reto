@@ -1,6 +1,9 @@
 #!/bin/bash
 set -e
 
+# Ignorar DATABASE_URL del .env local (usar la de Render)
+unset DATABASE_URL
+
 echo "→ Ejecutando migraciones..."
 alembic upgrade head
 
