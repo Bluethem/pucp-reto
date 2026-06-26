@@ -65,8 +65,3 @@ psql -d corruptometro -c "CREATE EXTENSION postgis;"
 | *David Luza Ccorimanya* | *Implementacion - Devops* |
 | *Christopher Henrry Albino Soto* | *Diseño UX/UI - Frontend* |
 | *Ricco Didier Rashuaman Sapallanay* | *Implementacion - Devops* |
-
-## Documentación adicional
-
-- [Spec general del sistema](./docs/spec.md) *(ajustar ruta según ubicación real)*
-- *(Agregar enlaces a: diagramas de arquitectura, ADRs, mockups, etc.)*
