@@ -1,26 +1,8 @@
-# Entorno / secretos (ADR-009)
 .env
-.env.local
-*.env
-
-# Python
 __pycache__/
-*.py[cod]
-*$py.class
+*.pyc
 .venv/
 venv/
-env/
-.Python
 *.egg-info/
+dist/
 .pytest_cache/
-.mypy_cache/
-.ruff_cache/
-
-# Alembic (no ignorar versions/, sí cachés locales)
-# (las migraciones SÍ se versionan)
-
-# IDE / SO
-.vscode/
-.idea/
-.DS_Store
-Thumbs.db
