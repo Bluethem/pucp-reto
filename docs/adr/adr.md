@@ -365,6 +365,63 @@ El modelo tipo YouTube es el que mejor equilibra la misión de transparencia con
 
 ---
 
+---
+
+## ADR-011 — Precios de referencia nacionales con ajuste regional contextual
+
+**Categoría:** Modelo de Datos
+
+**Contexto:**
+El motor de scoring (RF-SCO-02) necesita precios de referencia para comparar contra los precios declarados en los expedientes técnicos. Idealmente, estos precios deberían ser por departamento, porque el costo de los materiales varía significativamente según la ubicación de la obra (transporte, disponibilidad,etc.). Sin embargo:
+
+1. El INEI publica los **Índices Unificados de Precios de la Construcción (IUPC)** con precios absolutos de insumos solo a nivel **nacional**. No existe una fuente pública gratuita que publique precios absolutos de materiales individuales (cemento, acero, agregados) desagregados por departamento.
+2. El **Ministerio de Vivienda** publica **Valores Unitarios Oficiales de Edificación** por departamento, pero son costos por metro cuadrado de construcción (no por material individual).
+3. fuentes como **CAPECO/Revista Costos** publican precios por material y ciudad, pero requieren scraping frágil o suscripción paga.
+4. El torneo sugiere **Latinfo** como posible agregador, pero su disponibilidad y cobertura no están confirmadas.
+
+**Alternativas:**
+
+1. **Solo precios nacionales INEI (sin ajuste).**
+   - Comparación directa contra precio nacional.
+   - Simple, determinista, fuente pública gratuita.
+   - **Limitación:** una obra en Loreto con cemento 35% más caro que el promedio nacional aparecería como sobreprecio, aunque el diferencial sea explicable por logística.
+2. **INEI nacional + Valores Unitarios MVCS por departamento para fallback.**
+   - Score primario usa precio nacional INEI.
+   - Fallback RF-SCO-08 usa costo/m² regional del MVCS.
+   - Factores de ajuste regional se muestran como contexto visual, sin modificar el ratio.
+   - **Limitación:** los factores de ajuste no son precisos para materiales individuales (son promedios de construcción).
+3. **Scrapear CAPECO/Revista Costos para precios por ciudad.**
+   - Obtendría precios más precisos por región.
+   - **Limitación:** scraping frágil, requiere mantenimiento constante, puede violar términos de servicio. No cabe en ~11h de MVP.
+4. **Depender de Latinfo como agregador.**
+   - Si el torneo provee acceso, simplificaría todo.
+   - **Limitación:** disponibilidad no confirmada; no podemos diseñar el MVP asumiendo que existirá.
+
+**Criterios de Elección:**
+- **Disponibilidad de la fuente:** debe estar accesible hoy, sin acuerdos ni pagos.
+- **Precisión:** el precio de referencia debe ser razonable para la comparación.
+- **Transparencia (RNF-15, RF-G-04):** el usuario debe entender qué significa cada precio y sus limitaciones.
+- **Tiempo de implementación:** debe caber en ~11h de MVP.
+- **Cobertura geográfica:** el sistema cubre obras en todo el Perú, por lo que idealmente los precios deberían reflejar diferencias regionales.
+
+**Decisión:**
+Se adopta la **alternativa 2**: INEI a nivel nacional como fuente primaria de precios de referencia de insumos, Valores Unitarios del MVCS para el fallback regional, y factores de ajuste regional como contexto visual en el desglose del score.
+
+**Sustento:**
+La combinación INEI + MVCS cubre las dos necesidades del sistema: comparación por partida (INEI nacional) y validación de presupuesto total por región (MVCS en fallback). El factor de ajuste se muestra en la UI como información contextual —no modifica el ratio— porque aplicarlo directamente a materiales individuales introduciría imprecisión (el factor es un promedio de construcción completa, no de cada insumo). Esta estrategia es transparente para el usuario (la UI indica "precio nacional de referencia") y éticamente correcta (no oculta la limitación). El trade-off (menor precisión regional) se mitiga con los indicadores complementarios (postor único, adicionales de obra, etc.) que no dependen del precio de referencia y son mejores detectores de sobreprecio.
+
+**Consecuencias:**
+- **Positivas:** implementación rápida (~1h para el INEI, ~1h para el MVCS), fuente pública gratuita, sin dependencias externas frágiles.
+- **Negativas:** el score puede tener falsos positivos en regiones alejadas; se mitiga mostrando el factor regional en el desglose y priorizando indicadores complementarios.
+- **Trazabilidad:** cada partida registra la versión de la tabla INEI usada y la fuente del precio.
+
+**Referencias:**
+- RF-SCO-02, RF-SCO-07, RF-SCO-08, RF-SCO-10
+- ADR-006 (PostgreSQL + PostGIS para datos geoespaciales)
+- [`2.flujo-datos.md`](../../documentacion/2/2.flujo-datos.md) (sección 4: Modelo de precios de referencia)
+
+---
+
 ## Referencias
 
 - Bass, L., Clements, P., & Kazman, R. (2021). *Software Architecture in Practice* (4th ed.). Addison-Wesley.
