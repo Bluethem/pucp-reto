@@ -12,6 +12,7 @@ from decimal import Decimal
 from typing import Optional
 
 from app.core.database import SessionLocal
+from app.datasource.interface import DataSource
 from app.models.precio_referencia import PrecioReferencia
 
 
@@ -44,7 +45,7 @@ FACTORES_REGIONALES: dict[str, float] = {
 }
 
 
-class MviviendaDataSource:
+class MviviendaDataSource(DataSource):
 
     def obtener_costo_m2(
         self,
@@ -77,3 +78,24 @@ class MviviendaDataSource:
     def listar_factores_regionales(self) -> dict[str, float]:
         """Retorna todos los factores de ajuste regional."""
         return dict(FACTORES_REGIONALES)
+
+    def obtener_precio_referencia(self, codigo_inei, departamento=None):
+        return None
+
+    def get_metadata(self) -> dict:
+        return {"source": "mvivienda", "type": "costos_m2"}
+
+    def get_last_update(self) -> Optional[datetime]:
+        db = SessionLocal()
+        try:
+            resultado = (
+                db.query(PrecioReferencia)
+                .filter(PrecioReferencia.fuente == "mvivienda")
+                .order_by(PrecioReferencia.anio.desc(), PrecioReferencia.mes.desc())
+                .first()
+            )
+            if resultado:
+                return datetime(resultado.anio, resultado.mes, 1)
+            return None
+        finally:
+            db.close()

@@ -8,6 +8,8 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Optional
 
+from app.datasource.interface import DataSource
+
 
 class PrecioReferenciaMock:
     def __init__(self, codigo_inei, insumo, unidad, precio, departamento=None,
@@ -52,7 +54,7 @@ FACTORES_REGIONALES_MOCK: dict[str, float] = {
 }
 
 
-class MockDataSource:
+class MockDataSource(DataSource):
 
     def obtener_precio_referencia(self, codigo_inei, departamento=None):
         precio = PRECIOS_MOCK.get(codigo_inei)

@@ -34,6 +34,9 @@ class Settings(BaseSettings):
     # --- Gemini API (ADR-001) ---
     gemini_api_key: str = ""
 
+    # --- Firecrawl (descarga de PDFs desde INFOBRAS) ---
+    firecrawl_api_key: str = ""
+
     # --- Fuentes externas (ADR-002) ---
     seace_ocds_base_url: str = "https://contratacionesabiertas.oece.gob.pe"
     infobras_base_url: str = "https://appbp.contraloria.gob.pe/BuscadorCGR/Infobras"

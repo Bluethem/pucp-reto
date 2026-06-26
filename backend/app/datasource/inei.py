@@ -50,6 +50,17 @@ class INEIDataSource:
         # El costo/m² lo provee MVCS; INEI solo precios por insumo.
         return None
 
+    def _insertar_en_db(self, registros: list[PrecioReferencia]) -> int:
+        """Inserta registros de precios en BD. Separado para facilitar tests mock."""
+        db = SessionLocal()
+        try:
+            for r in registros:
+                db.add(r)
+            db.commit()
+            return len(registros)
+        finally:
+            db.close()
+
     def cargar_xlsx(self, ruta_xlsx: str, mes: int, anio: int) -> int:
         """Parsea un .xlsx de Índices Unificados y hace upsert en BD.
 
@@ -62,29 +73,25 @@ class INEIDataSource:
         hoja = wb.active
         filas = list(hoja.iter_rows(min_row=2, values_only=True))
 
-        db = SessionLocal()
-        cargadas = 0
-        try:
-            for codigo, insumo, unidad, precio, departamento in filas:
-                if not codigo or precio is None:
-                    continue
-                db.add(
-                    PrecioReferencia(
-                        codigo_inei=str(codigo),
-                        insumo=str(insumo or ""),
-                        unidad=str(unidad or ""),
-                        precio=Decimal(str(precio)),
-                        departamento=departamento or None,
-                        mes=mes,
-                        anio=anio,
-                        fuente="inei",
-                    )
+        registros: list[PrecioReferencia] = []
+        for codigo, insumo, unidad, precio, departamento in filas:
+            if not codigo or precio is None:
+                continue
+            registros.append(
+                PrecioReferencia(
+                    codigo_inei=str(codigo),
+                    insumo=str(insumo or ""),
+                    unidad=str(unidad or ""),
+                    precio=Decimal(str(precio)),
+                    departamento=departamento or None,
+                    mes=mes,
+                    anio=anio,
+                    fuente="inei",
                 )
-                cargadas += 1
-            db.commit()
-        finally:
-            db.close()
-        return cargadas
+            )
+        if registros:
+            return self._insertar_en_db(registros)
+        return 0
 
     def get_metadata(self) -> dict:
         return {"source": "inei", "tipo": "indices_unificados"}

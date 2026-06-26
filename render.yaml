@@ -1,0 +1,24 @@
+services:
+  - type: web
+    name: glass-api
+    runtime: python
+    repo: https://github.com/Bluethem/pucp-reto
+    buildCommand: pip install -r backend/requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    workingDirectory: /backend
+    preDeployCommand: alembic upgrade head
+    envVars:
+      - key: ENVIRONMENT
+        value: production
+      - key: DEBUG
+        value: "false"
+      - key: FRONTEND_URL
+        value: https://pucp-reto.vercel.app,http://localhost:3000
+      - key: DATABASE_URL
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: FIRECRAWL_API_KEY
+        sync: false
+      - key: JWT_SECRET_KEY
+        generateValue: true

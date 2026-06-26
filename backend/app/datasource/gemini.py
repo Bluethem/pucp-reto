@@ -28,7 +28,7 @@ class GeminiDataSource:
     """Extractor de partidas basado en Gemini API."""
 
     def __init__(self, api_key: str | None = None, modelo: str = "gemini-1.5-flash"):
-        self.api_key = api_key or settings.gemini_api_key
+        self.api_key = api_key if api_key is not None else settings.gemini_api_key
         self.modelo = modelo
 
     def disponible(self) -> bool:
@@ -59,7 +59,10 @@ class GeminiDataSource:
         if texto.startswith("```"):
             texto = texto.strip("`")
             texto = texto[texto.find("[") :] if "[" in texto else texto
-        datos = json.loads(texto)
+        try:
+            datos = json.loads(texto)
+        except json.JSONDecodeError as exc:
+            raise GeminiExtractionError(f"Error parseando JSON de Gemini: {exc}") from exc
         if not isinstance(datos, list):
             raise GeminiExtractionError("Respuesta de Gemini no es una lista de partidas")
         return datos
