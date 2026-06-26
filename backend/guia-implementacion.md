@@ -373,7 +373,43 @@ def test_get_me_sin_token(client):
 3. Correr `pytest -v` antes de mergear (todos los tests deben pasar)
 4. Después del merge, verificar Swagger en `/docs`
 
-## Deploy
+## Deploy (producción)
 
-- **Opción A (Docker):** `docker compose up -d` en el servidor
-- **Opción B (Render):** conectar repo, usar `uvicorn app.main:app` como start command
+El backend se despliega en **Render usando Docker**, con base de datos en **Supabase**.
+
+### Requisitos en Render
+
+- `DATABASE_URL` — URL de Supabase (PostgreSQL + PostGIS)
+- `ENVIRONMENT=production`
+- `GEMINI_API_KEY` — clave de Google Gemini
+- `FIRECRAWL_API_KEY` — clave de Firecrawl
+- `JWT_SECRET_KEY` — secreto para JWT (Render puede generar uno automático)
+
+### Flujo de arranque (entrypoint.sh)
+
+Render usa el `Dockerfile`, cuyo `CMD` ejecuta `entrypoint.sh`:
+
+1. `unset DATABASE_URL` — ignora la variable local, usa la de Render
+2. `alembic upgrade head` — corre migraciones (crea tablas, índices, PostGIS)
+3. `python app/scripts/seed_infobras.py` — inserta datos de prueba si la BD está vacía
+4. `uvicorn app.main:app --host 0.0.0.0 --port $PORT` — inicia la API
+
+### Supabase
+
+1. Crear proyecto en [supabase.com](https://supabase.com)
+2. Activar PostGIS: `CREATE EXTENSION IF NOT EXISTS postgis;`
+3. Copiar **Connection String (URI)** desde Project Settings → Database
+4. Usar formato: `postgresql+psycopg2://postgres:pass@db.xxx.supabase.co:5432/postgres?sslmode=require`
+
+### Notas sobre funcionalidades no implementadas
+
+| Funcionalidad | Estado | Documentado como |
+|---|---|---|
+| Buscador global multi-recurso | No implementado (solo obras) | RF-G-08 |
+| Comentarios anidados (hilos) | Creación funciona, lectura plana sin anidar | RF-COM-05 |
+| Reacciones/votos en comentarios | No implementado | RF-COM-04 |
+| Notificaciones a usuarios | No implementado | RF-USR-04, RF-USR-05, RF-USR-06 |
+| Recuperar contraseña | No implementado | RF-USR-02 |
+| ETL automático (APScheduler) | Servicio definido, no iniciado en main.py | ADR-002 |
+| Redis / caché de fuentes | Config declarada, no implementada | ADR-007 |
+| RF-EMP-04 a RF-EMP-07 | No implementados | Historial, alertas, sanciones de contratista |

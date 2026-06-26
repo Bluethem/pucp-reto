@@ -21,12 +21,12 @@ Sistema web de detección de sobreprecios y transparencia en obras públicas del
 ## Stack tecnológico
 
 | Capa | Tecnología |
-|---|---|
+|---|---|---|
 | Frontend | Next.js 14 (App Router) + TypeScript, Leaflet/react-leaflet, Tailwind CSS, shadcn/ui, Recharts |
-| Backend | FastAPI (Python) |
-| Base de datos | PostgreSQL + PostGIS |
-| Jobs / ETL | APScheduler (o Celery + Redis) para sincronización periódica de fuentes |
-| Deployment | Vercel (frontend) + Railway/Render o Supabase (backend + DB) |
+| Backend | FastAPI (Python) + Uvicorn |
+| Base de datos | PostgreSQL + PostGIS (Supabase) |
+| Jobs / ETL | APScheduler para sincronización periódica de fuentes |
+| Deployment | Vercel (frontend) + Render con Docker (backend) |
 
 ## Instrucciones para correr el proyecto localmente
 
@@ -62,6 +62,46 @@ La aplicación quedará disponible en `http://localhost:3000`, consumiendo la AP
 createdb corruptometro
 psql -d corruptometro -c "CREATE EXTENSION postgis;"
 ```
+
+## Producción
+
+### Stack de producción
+
+| Componente | Servicio |
+|---|---|
+| Frontend | Vercel |
+| Backend API | Render (Docker) |
+| Base de datos | Supabase (PostgreSQL + PostGIS) |
+
+### Configurar Supabase
+
+1. Crear proyecto en [supabase.com](https://supabase.com)
+2. En **SQL Editor**, ejecutar:
+   ```sql
+   CREATE EXTENSION IF NOT EXISTS postgis;
+   ```
+3. En **Project Settings → Database → Connection string → URI**, copiar la URL
+4. Modificarla para SQLAlchemy:
+   ```
+   postgresql+psycopg2://postgres:password@db.xxx.supabase.co:5432/postgres?sslmode=require
+   ```
+
+### Configurar Render
+
+1. Enlazar el repositorio a Render
+2. Render detecta el `Dockerfile` en `backend/` y construye automaticamente
+3. En **Environment Variables**, configurar:
+   - `DATABASE_URL` — URL de Supabase (con `+psycopg2` y `?sslmode=require`)
+   - `ENVIRONMENT=production`
+   - `GEMINI_API_KEY` — clave de API de Google Gemini
+   - `FIRECRAWL_API_KEY` — clave de API de Firecrawl
+   - `JWT_SECRET_KEY` — secreto para tokens JWT
+4. Hacer deploy
+
+El `entrypoint.sh` del contenedor ejecuta automaticamente:
+1. Migraciones (`alembic upgrade head`) — crea tablas e índices
+2. Seed (`python app/scripts/seed_infobras.py`) — inserta datos de prueba si la BD esta vacia
+3. Servidor (`uvicorn app.main:app`) — inicia la API en el puerto asignado por Render
 
 ## Modelos y herramientas de IA utilizadas
 
