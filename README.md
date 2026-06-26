@@ -21,7 +21,7 @@ Sistema web de detección de sobreprecios y transparencia en obras públicas del
 ## Stack tecnológico
 
 | Capa | Tecnología |
-|---|---|
+|---|---|---|
 | Frontend | Next.js 14 (App Router) + TypeScript, Leaflet/react-leaflet, Tailwind CSS, shadcn/ui, Recharts |
 | Backend | FastAPI (Python) |
 | Base de datos | PostgreSQL + PostGIS |

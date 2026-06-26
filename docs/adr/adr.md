@@ -96,6 +96,9 @@ Se adopta el **modelo híbrido**: ETL batch programado con APScheduler para INEI
 **Sustento:**
 El modelo híbrido respeta los límites del plan gratuito de Latinfo (1,000 consultas/mes se agotarían rápidamente con consultas en tiempo real) y garantiza disponibilidad incluso cuando la fuente externa cae (RNF-06). La cadencia de actualización de cada fuente determina el TTL de su caché: mensual para INEI, diaria para SEACE, semanal para JNE. El desfase temporal es aceptable y se muestra al usuario mediante la fecha de actualización de cada dato (RF-G-04). El trade-off son datos no siempre en vivo a cambio de disponibilidad, performance y costo.
 
+**Estado de implementación:**
+El servicio `ETLService` con APScheduler esta definido en `app/services/etl_service.py` pero **no se inicia automaticamente** en `main.py`. Los adaptadores de datos (INEI, SEACE, Gemini, Firecrawl, Mvivienda) estan implementados y funcionales individualmente. Pendiente: conectar `etl_service.start()` en un evento `startup` de FastAPI para activar la ingesta programada.
+
 ---
 
 ## ADR-003 — Stack tecnológico: Next.js + FastAPI + PostgreSQL/PostGIS
@@ -265,6 +268,9 @@ Se implementa un **sistema de caché con TTL configurable por fuente** y degrada
 
 **Sustento:**
 El TTL por fuente optimiza el uso de los recursos limitados: INEI se actualiza mensualmente, por lo que 1 consulta cada 30 días es suficiente; SEACE cambia a diario, por lo que su TTL es de 24h; JNE es semanal, TTL de 7 días. Esto reduce las consultas a las fuentes externas a ~40-50 por mes (frente a potencialmente miles sin caché), manteniendo el plan gratuito de Latinfo viable. La degradación elegante (RNF-06) garantiza que la aplicación nunca se queda en blanco: si la fuente falla, el usuario ve la última versión cacheada con la fecha visible (RF-G-04). El trade-off es una implementación ligeramente más compleja (manejo de expiración, actualización asíncrona, indicadores de frescura) que se justifica plenamente por la disponibilidad y el costo.
+
+**Estado de implementación:**
+Pendiente. La variable `redis_url` esta declarada en `config.py` pero no se usa en ninguna parte del codigo. No hay implementación de Redis ni de un sistema de cache en memoria. La precomputación de scores en BD cumple parcialmente el rol de cache para datos de obras, pero no hay TTL ni degradación elegante para fuentes externas. Pendiente para fase futura.
 
 ---
 

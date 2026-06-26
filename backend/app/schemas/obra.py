@@ -35,6 +35,8 @@ class ObraResponse(BaseModel):
     score_riesgo: int | None = None
     modo_analisis: str | None = None
     nivel_riesgo: str | None = None
+    entidad_nombre: str | None = None
+    contratista_nombre: str | None = None
 
     @model_validator(mode="after")
     def _set_nivel(self):
