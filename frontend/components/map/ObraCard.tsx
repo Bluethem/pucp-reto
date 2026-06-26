@@ -21,7 +21,7 @@ const ESTADO_COLOR: Record<string, string> = {
 
 export default function ObraCard({ obra, compact = false }: ObraCardProps) {
   return (
-    <div className="bg-white border border-gray-200 rounded-xl p-4 hover:shadow-md transition-shadow">
+    <div className="bg-white border border-gray-200 rounded-xl p-4 hover:shadow-md transition-shadow h-full flex flex-col">
       <div className="flex items-start justify-between gap-2 mb-2">
         <h3 className="text-[13px] font-semibold text-navy-800 leading-snug line-clamp-2 flex-1">
           {obra.titulo}
@@ -60,7 +60,7 @@ export default function ObraCard({ obra, compact = false }: ObraCardProps) {
 
       <Link
         href={`/obra/${obra.id}`}
-        className="mt-3 flex items-center justify-center gap-1.5 w-full py-2 text-[12px] font-semibold text-teal-700 bg-teal-50 hover:bg-teal-100 rounded-lg transition-colors"
+        className="mt-auto pt-3 flex items-center justify-center gap-1.5 w-full py-2 text-[12px] font-semibold text-teal-700 bg-teal-50 hover:bg-teal-100 rounded-lg transition-colors"
       >
         Ver detalle <ArrowRight className="w-3.5 h-3.5" />
       </Link>
