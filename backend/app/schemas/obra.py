@@ -1,5 +1,7 @@
 """Schemas Pydantic del módulo Obras."""
 
+from typing import Optional
+
 from pydantic import BaseModel, ConfigDict, model_validator
 
 from app.core.utils import nivel_riesgo
@@ -53,6 +55,18 @@ class ObraGeoResponse(BaseModel):
     nivel_riesgo: str | None = None
     lat: float | None = None
     lon: float | None = None
+
+
+class ObraExtraerRequest(BaseModel):
+    codigo_infobras: str
+    titulo: Optional[str] = None
+    departamento: Optional[str] = None
+
+
+class ObraExtraerResponse(BaseModel):
+    obra: ObraResponse
+    score: dict | None = None
+    partidas: list[PartidaResponse] = []
 
 
 class ObraFilterParams(BaseModel):
