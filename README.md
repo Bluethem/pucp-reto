@@ -1,4 +1,4 @@
-# CorruptóMetro
+# Glass
 
 Sistema web de detección de sobreprecios y transparencia en obras públicas del Estado Peruano.
 
