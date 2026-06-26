@@ -19,7 +19,7 @@ function bboxConfig(geo: GeoFeature): { center: [number, number]; scale: number 
     let coords: number[][] = []
     const g = geo.geometry
     if (g.type === 'Polygon') {
-      coords = g.coordinates[0] as number[][]
+      coords = (g.coordinates as number[][][])[0]
     } else if (g.type === 'MultiPolygon') {
       for (const poly of g.coordinates as number[][][][]) coords.push(...poly[0])
     }
