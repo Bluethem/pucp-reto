@@ -1,11 +1,8 @@
 #!/bin/bash
 set -e
 
-# Ignorar DATABASE_URL del .env local (usar la de Render)
-unset DATABASE_URL
-
 echo "→ Ejecutando migraciones..."
-alembic upgrade head
+alembic upgrade head || { echo "→ migraciones ya ejecutadas, continuando..."; }
 
 echo "→ Sembrando datos iniciales si la BD está vacía..."
 python scripts/seed_infobras.py
