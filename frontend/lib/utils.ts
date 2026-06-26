@@ -7,14 +7,14 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export function riskColor(score: RiskLevel): RiskColor {
-  if (score <= 2) return 'green'
-  if (score === 3) return 'yellow'
+  if (score <= 40) return 'green'
+  if (score <= 60) return 'yellow'
   return 'red'
 }
 
 export function riskLabel(score: RiskLevel): string {
-  if (score <= 2) return 'Bajo'
-  if (score === 3) return 'Medio'
+  if (score <= 40) return 'Bajo'
+  if (score <= 60) return 'Medio'
   return 'Alto'
 }
 
@@ -32,14 +32,14 @@ export function formatNumber(value: number): string {
 }
 
 export function riskColorClass(score: RiskLevel): string {
-  if (score <= 2) return 'text-green-600 bg-green-50 border-green-200'
-  if (score === 3) return 'text-yellow-600 bg-yellow-50 border-yellow-200'
+  if (score <= 40) return 'text-green-600 bg-green-50 border-green-200'
+  if (score <= 60) return 'text-yellow-600 bg-yellow-50 border-yellow-200'
   return 'text-red-600 bg-red-50 border-red-200'
 }
 
 export function riskBulletColor(score: RiskLevel): string {
-  if (score <= 2) return '#16a34a'
-  if (score === 3) return '#ca8a04'
+  if (score <= 40) return '#16a34a'
+  if (score <= 60) return '#ca8a04'
   return '#dc2626'
 }
 

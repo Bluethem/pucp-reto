@@ -1,10 +1,10 @@
 'use client'
 
 import dynamic from 'next/dynamic'
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
-import { OBRAS } from '@/lib/mock-data'
-import type { MapFilters, RiskLevel } from '@/types'
+import { api } from '@/lib/api'
+import type { MapFilters, RiskLevel, Obra } from '@/types'
 import MapFiltersPanel from '@/components/map/MapFilters'
 import ObraCard from '@/components/map/ObraCard'
 import BannerCarousel from '@/components/home/BannerCarousel'
@@ -23,26 +23,36 @@ const PAGE_SIZE = 4
 
 function matchRiesgo(score: RiskLevel, riesgo: string): boolean {
   if (!riesgo) return true
-  if (riesgo.startsWith('Alto')) return score >= 4
-  if (riesgo.startsWith('Medio')) return score === 3
-  if (riesgo.startsWith('Bajo')) return score <= 2
+  if (riesgo.startsWith('Alto')) return score >= 61
+  if (riesgo.startsWith('Medio')) return score >= 41 && score <= 60
+  if (riesgo.startsWith('Bajo')) return score <= 40
   return true
 }
 
 export default function HomePage() {
+  const [obras, setObras] = useState<Obra[]>([])
+  const [loading, setLoading] = useState(true)
   const [filters, setFilters] = useState<MapFilters>(DEFAULT_FILTERS)
   const [page, setPage] = useState(1)
 
+  useEffect(() => {
+    setLoading(true)
+    api.obras.listar().then(data => {
+      setObras(data)
+      setLoading(false)
+    }).catch(() => setLoading(false))
+  }, [])
+
   const filteredObras = useMemo(() => {
     setPage(1)
-    return OBRAS.filter(o => {
-      if (filters.region && o.region.toLowerCase() !== filters.region.toLowerCase()) return false
+    return obras.filter(o => {
+      if (filters.region && o.departamento?.toLowerCase() !== filters.region.toLowerCase()) return false
       if (filters.tipo && o.tipo !== filters.tipo) return false
       if (filters.estado && o.estado !== filters.estado) return false
       if (!matchRiesgo(o.score, filters.riesgo)) return false
       return true
     })
-  }, [filters])
+  }, [filters, obras])
 
   const totalPages = Math.ceil(filteredObras.length / PAGE_SIZE)
   const pageObras = filteredObras.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
@@ -69,7 +79,7 @@ export default function HomePage() {
       <MapFiltersPanel
         filters={filters}
         onChange={setFilters}
-        totalObras={OBRAS.length}
+        totalObras={obras.length}
         filteredObras={filteredObras.length}
       />
 
@@ -90,7 +100,9 @@ export default function HomePage() {
 
           {/* Header */}
           <p className="text-xs font-light text-gray-400 px-1 mb-3 shrink-0">
-            {filters.region ? (
+            {loading ? (
+              'Cargando obras…'
+            ) : filters.region ? (
               <>
                 <span className="font-semibold text-navy-800">{filteredObras.length}</span>{' '}
                 obras en <span className="font-semibold text-teal-600">{filters.region}</span>
@@ -103,9 +115,13 @@ export default function HomePage() {
             )}
           </p>
 
-          {/* Cards — flex-1 ocupa todo el espacio restante */}
+          {/* Cards */}
           <div className="flex-1 flex flex-col gap-3 min-h-0">
-            {filteredObras.length === 0 ? (
+            {loading ? (
+              <div className="flex-1 flex items-center justify-center text-gray-400 text-sm font-light">
+                Cargando…
+              </div>
+            ) : filteredObras.length === 0 ? (
               <div className="flex-1 flex items-center justify-center text-gray-400 text-sm font-light">
                 No hay obras para los filtros seleccionados
               </div>

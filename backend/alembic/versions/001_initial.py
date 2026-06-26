@@ -111,7 +111,7 @@ def upgrade() -> None:
         sa.Column("entidad_id", sa.String(36), sa.ForeignKey("entidades.id")),
         sa.Column("contratista_id", sa.String(36), sa.ForeignKey("contratistas.id")),
     )
-    op.create_index("idx_obras_ubicacion", "obras", ["ubicacion"], postgresql_using="gist")
+    # Nota: PostGIS crea automáticamente el índice GIST para la columna geography
     op.create_index("idx_obras_score", "obras", ["score_riesgo"])
     op.create_index("idx_obras_departamento", "obras", ["departamento"])
     op.create_index("idx_obras_entidad", "obras", ["entidad_id"])

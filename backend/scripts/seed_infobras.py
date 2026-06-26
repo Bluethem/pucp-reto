@@ -1,5 +1,6 @@
 """Script de seed: carga obras y precios de referencia de prueba.
 
+Idempotente: solo carga datos si la tabla obras está vacía.
 Útil para tener datos inmediatamente después del deploy, sin depender
 de Firecrawl + Gemini (que requieren API keys y conexión externa).
 
@@ -9,11 +10,14 @@ Uso:
 Requiere DATABASE_URL configurada en .env o variable de entorno.
 """
 
+import sys
 import uuid
 from decimal import Decimal
 
+sys.path.insert(0, "/app")
+
 from app.core.config import settings
-from app.core.database import Base, engine, SessionLocal
+from app.core.database import SessionLocal
 from app.models.contratista import Contratista
 from app.models.entidad import Entidad
 from app.models.obra import Obra
@@ -58,68 +62,64 @@ PRECIOS = [
 
 def seed():
     db = SessionLocal()
+    try:
+        obra_count = db.query(Obra).count()
+        if obra_count > 0:
+            print(f"BD ya tiene {obra_count} obras — saltando seed")
+            return
 
-    # Limpiar datos existentes
-    for table in [Obra, PrecioReferencia, Contratista, Entidad]:
-        db.query(table).delete()
-    db.commit()
+        entidades = []
+        for data in ENTIDADES:
+            ent = Entidad(**data)
+            db.add(ent)
+            entidades.append(ent)
+        db.commit()
 
-    # Entidades
-    entidades = []
-    for data in ENTIDADES:
-        ent = Entidad(**data)
-        db.add(ent)
-        entidades.append(ent)
-    db.commit()
+        contratistas = []
+        for data in CONTRATISTAS:
+            con = Contratista(**data)
+            db.add(con)
+            contratistas.append(con)
+        db.commit()
 
-    # Contratistas
-    contratistas = []
-    for data in CONTRATISTAS:
-        con = Contratista(**data)
-        db.add(con)
-        contratistas.append(con)
-    db.commit()
+        for data in OBRAS:
+            obra = Obra(
+                codigo_infobras=data["codigo_infobras"],
+                titulo=data["titulo"],
+                tipo_obra=data["tipo_obra"],
+                estado=data["estado"],
+                presupuesto_total=Decimal(str(data["presupuesto_total"])),
+                metrado_total=Decimal(str(data["metrado_total"])),
+                departamento=data["departamento"],
+                score_riesgo=data["score_riesgo"],
+                modo_analisis=data["modo_analisis"],
+                entidad_id=entidades[data["entidad_idx"]].id,
+                contratista_id=contratistas[data["contratista_idx"]].id,
+            )
+            db.add(obra)
+        db.commit()
 
-    # Obras
-    for data in OBRAS:
-        obra = Obra(
-            codigo_infobras=data["codigo_infobras"],
-            titulo=data["titulo"],
-            tipo_obra=data["tipo_obra"],
-            estado=data["estado"],
-            presupuesto_total=Decimal(str(data["presupuesto_total"])),
-            metrado_total=Decimal(str(data["metrado_total"])),
-            departamento=data["departamento"],
-            score_riesgo=data["score_riesgo"],
-            modo_analisis=data["modo_analisis"],
-            entidad_id=entidades[data["entidad_idx"]].id,
-            contratista_id=contratistas[data["contratista_idx"]].id,
-        )
-        db.add(obra)
-    db.commit()
+        for data in PRECIOS:
+            db.add(PrecioReferencia(
+                codigo_inei=data["codigo_inei"],
+                insumo=data["insumo"],
+                unidad=data["unidad"],
+                precio=Decimal(str(data["precio"])),
+                departamento=data["departamento"],
+                mes=data["mes"],
+                anio=data["anio"],
+                fuente=data["fuente"],
+            ))
+        db.commit()
 
-    # Precios de referencia
-    for data in PRECIOS:
-        precio = PrecioReferencia(
-            codigo_inei=data["codigo_inei"],
-            insumo=data["insumo"],
-            unidad=data["unidad"],
-            precio=Decimal(str(data["precio"])),
-            departamento=data["departamento"],
-            mes=data["mes"],
-            anio=data["anio"],
-            fuente=data["fuente"],
-        )
-        db.add(precio)
-    db.commit()
+        print(f"Seed completado:")
+        print(f"  - {len(ENTIDADES)} entidades")
+        print(f"  - {len(CONTRATISTAS)} contratistas")
+        print(f"  - {len(OBRAS)} obras")
+        print(f"  - {len(PRECIOS)} precios de referencia")
 
-    db.close()
-
-    print(f"Seed completado:")
-    print(f"  - {len(ENTIDADES)} entidades")
-    print(f"  - {len(CONTRATISTAS)} contratistas")
-    print(f"  - {len(OBRAS)} obras")
-    print(f"  - {len(PRECIOS)} precios de referencia")
+    finally:
+        db.close()
 
 
 if __name__ == "__main__":

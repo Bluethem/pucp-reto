@@ -7,42 +7,27 @@ interface RiskMeterProps {
   size?: 'sm' | 'md' | 'lg'
 }
 
-const SEGMENTS = [
-  { value: 1, color: '#16a34a', label: '1' },
-  { value: 2, color: '#4ade80', label: '2' },
-  { value: 3, color: '#ca8a04', label: '3' },
-  { value: 4, color: '#f97316', label: '4' },
-  { value: 5, color: '#dc2626', label: '5' },
-]
-
 export default function RiskMeter({ score, size = 'md' }: RiskMeterProps) {
+  const clamped = Math.min(100, Math.max(0, score))
   const barH = { sm: 'h-2', md: 'h-3', lg: 'h-4' }[size]
   const labelSize = { sm: 'text-xs', md: 'text-sm', lg: 'text-base' }[size]
 
+  const green = Math.min(clamped, 40) / 40 * 100
+  const yellow = clamped > 40 ? Math.min(clamped - 40, 20) / 20 * 100 : 0
+  const red = clamped > 60 ? (clamped - 60) / 40 * 100 : 0
+
   return (
     <div className="w-full">
-      <div className={`flex rounded-full overflow-hidden gap-0.5 ${barH}`}>
-        {SEGMENTS.map(seg => (
-          <div
-            key={seg.value}
-            className="flex-1 transition-opacity"
-            style={{
-              backgroundColor: seg.color,
-              opacity: seg.value <= score ? 1 : 0.18,
-            }}
-          />
-        ))}
+      <div className={`flex ${barH} rounded-full overflow-hidden bg-gray-200`}>
+        <div className="h-full transition-all duration-500 bg-green-500" style={{ width: `${green}%` }} />
+        <div className="h-full transition-all duration-500 bg-yellow-500" style={{ width: `${yellow}%` }} />
+        <div className="h-full transition-all duration-500 bg-red-500" style={{ width: `${red}%` }} />
       </div>
-      <div className={`flex justify-between mt-1 ${labelSize}`}>
-        {SEGMENTS.map(seg => (
-          <span
-            key={seg.value}
-            className="font-medium"
-            style={{ color: seg.value <= score ? seg.color : '#d1d5db' }}
-          >
-            {seg.label}
-          </span>
-        ))}
+      <div className={`flex justify-between mt-1 ${labelSize} text-gray-400`}>
+        <span>0</span>
+        <span className="text-green-600 font-medium">40</span>
+        <span className="text-yellow-600 font-medium">60</span>
+        <span>100</span>
       </div>
     </div>
   )
