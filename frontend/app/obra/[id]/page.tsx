@@ -56,7 +56,7 @@ export default async function ObraDetailPage({ params }: Props) {
         <div className="grid grid-cols-3 gap-x-8 gap-y-6">
           <div>
             <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 mb-1">Presupuesto total</p>
-            <p className="text-4xl font-extrabold text-navy-800 leading-none">{formatCurrency(obra.presupuestoTotal)}</p>
+            <p className="text-4xl font-extrabold text-navy-800 leading-none">{obra.presupuestoTotal ? formatCurrency(obra.presupuestoTotal) : '—'}</p>
           </div>
           <div>
             <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 mb-1">Empresa contratista</p>

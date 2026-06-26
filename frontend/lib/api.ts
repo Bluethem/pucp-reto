@@ -45,8 +45,8 @@ function mapObraDetalle(b: any, scoreData?: any): import('@/types').Obra {
   obra.expedientePdfUrl = 'https://cdn.www.gob.pe/uploads/document/file/6495857/5669010-expediente-tecnico-obra-rio-viejo-flores-parte3.pdf?v=1718742062'
   if (scoreData) {
     obra.score = scoreData.score ?? obra.score
-    obra.partidas = (scoreData.partidas ?? []).map((p: any) => ({
-      id: '',
+    obra.partidas = (scoreData.partidas ?? []).map((p: any, i: number) => ({
+      id: `p-${i}`,
       insumo: p.insumo,
       unidad: p.unidad,
       cantidad: p.cantidad,
