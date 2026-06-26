@@ -27,7 +27,7 @@ class GeminiExtractionError(RuntimeError):
 class GeminiDataSource:
     """Extractor de partidas basado en Gemini API."""
 
-    def __init__(self, api_key: str | None = None, modelo: str = "gemini-1.5-flash"):
+    def __init__(self, api_key: str | None = None, modelo: str = "gemini-2.0-flash"):
         self.api_key = api_key if api_key is not None else settings.gemini_api_key
         self.modelo = modelo
 
