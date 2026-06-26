@@ -19,6 +19,7 @@ class Comentario(Base):
     contenido = Column(Text, nullable=False)
     padre_id = Column(String(36), ForeignKey("comentarios.id"))
     reportado = Column(Boolean, default=False)
+    oculto = Column(Boolean, default=False)  # moderación admin (RF-ADM-02)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     usuario = relationship("Usuario", back_populates="comentarios")
