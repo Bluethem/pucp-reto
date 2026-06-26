@@ -5,8 +5,19 @@ from sqlalchemy import cast, func, or_
 from sqlalchemy.orm import Session
 
 from app.models.obra import Obra
+from app.models.contratista import Contratista
+from app.models.entidad import Entidad
 
 NIVELES = {"verde": (0, 40), "amarillo": (41, 60), "rojo": (61, 100)}
+
+
+def _enriquecer(obra: Obra) -> Obra:
+    """Carga nombres de entidad y contratista en atributos virtuales."""
+    if obra.entidad:
+        obra.entidad_nombre = obra.entidad.nombre
+    if obra.contratista:
+        obra.contratista_nombre = obra.contratista.razon_social
+    return obra
 
 
 def listar_obras(
@@ -18,7 +29,10 @@ def listar_obras(
     skip: int = 0,
     limit: int = 100,
 ) -> list[Obra]:
-    query = db.query(Obra)
+    query = db.query(Obra).options(
+        __import__("sqlalchemy").orm.joinedload(Obra.entidad),
+        __import__("sqlalchemy").orm.joinedload(Obra.contratista),
+    )
     if departamento:
         query = query.filter(Obra.departamento == departamento)
     if tipo_obra:
@@ -28,11 +42,20 @@ def listar_obras(
     if nivel and nivel in NIVELES:
         bajo, alto = NIVELES[nivel]
         query = query.filter(Obra.score_riesgo >= bajo, Obra.score_riesgo <= alto)
-    return query.offset(skip).limit(limit).all()
+    obras = query.offset(skip).limit(limit).all()
+    for o in obras:
+        _enriquecer(o)
+    return obras
 
 
 def obtener_obra(db: Session, obra_id: str) -> Obra | None:
-    return db.query(Obra).filter(Obra.id == obra_id).first()
+    obra = db.query(Obra).options(
+        __import__("sqlalchemy").orm.joinedload(Obra.entidad),
+        __import__("sqlalchemy").orm.joinedload(Obra.contratista),
+    ).filter(Obra.id == obra_id).first()
+    if obra:
+        _enriquecer(obra)
+    return obra
 
 
 def obras_geolocalizadas(
