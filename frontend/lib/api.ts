@@ -41,6 +41,8 @@ function mapObra(b: any): import('@/types').Obra {
 
 function mapObraDetalle(b: any, scoreData?: any): import('@/types').Obra {
   const obra = mapObra(b)
+  // Expediente PDF demo (usar una URL real de gob.pe)
+  obra.expedientePdfUrl = 'https://cdn.www.gob.pe/uploads/document/file/6495857/5669010-expediente-tecnico-obra-rio-viejo-flores-parte3.pdf?v=1718742062'
   if (scoreData) {
     obra.score = scoreData.score ?? obra.score
     obra.partidas = (scoreData.partidas ?? []).map((p: any) => ({
@@ -51,15 +53,23 @@ function mapObraDetalle(b: any, scoreData?: any): import('@/types').Obra {
       precioDeclarado: p.precio_declarado,
       precioReferencia: p.precio_referencia,
       ratio: p.ratio,
-      fuente: p.fuente,
+      fuente: p.fuente || 'INEI',
     }))
     obra.scoreDetalle = []
     if (scoreData.alertas !== undefined) {
       obra.scoreDetalle.push({
         nombre: 'Alertas detectadas',
-        valor: scoreData.alertas,
-        peso: 1,
+        valor: Math.min(scoreData.alertas * 20, 100),
+        peso: 0.6,
         descripcion: `Partidas con ratio ≥ 1.3: ${scoreData.alertas} de ${scoreData.total_partidas}`,
+      })
+    }
+    if (scoreData.partidas_comparables !== undefined) {
+      obra.scoreDetalle.push({
+        nombre: 'Cobertura de referencia',
+        valor: Math.min(Math.round((scoreData.partidas_comparables / Math.max(scoreData.total_partidas, 1)) * 100), 100),
+        peso: 0.2,
+        descripcion: `Partidas con precio de referencia disponible: ${scoreData.partidas_comparables} de ${scoreData.total_partidas}`,
       })
     }
     obra.modoAnalisis = scoreData.modo_analisis ?? obra.modoAnalisis
