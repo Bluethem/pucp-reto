@@ -8,6 +8,16 @@ Sistema web de detección de sobreprecios y transparencia en obras públicas del
 
 **Usuario objetivo:** Ciudadanos, periodistas de investigación, y fiscalizadores (regidores de oposición, sociedad civil organizada) que necesitan identificar obras públicas con indicios de sobreprecio sin tener que cruzar manualmente expedientes técnicos contra tablas de precios oficiales.
 
+### 5W — ¿A quién nos dirigimos?
+
+| W | Respuesta |
+|---|---|
+| **Who** (¿Quién?) | Ciudadanos, periodistas de investigación, regidores de oposición y sociedad civil organizada interesados en la vigilancia de la inversión pública. |
+| **What** (¿Qué?) | Un sistema web que cruza automáticamente los precios declarados en expedientes técnicos de obras públicas contra los precios de referencia oficiales del INEI, generando alertas de sobreprecio claras y explicables. |
+| **When** (¿Cuándo?) | Durante la ejecución de la obra y al momento de evaluar su cierre o liquidación, cuando los datos ya están registrados en INFOBRAS. |
+| **Where** (¿Dónde?) | En todo el Perú. La plataforma cubre obras de municipalidades distritales, provinciales y gobiernos regionales, con datos extraídos de los portales nacionales. |
+| **Why** (¿Por qué?) | Porque la información sobre obras públicas está fragmentada en más de cinco portales gubernamentales (INFOBRAS, SEACE, INEI, SUNAT, JNE) y el ciudadano promedio no puede cruzarla manualmente. Sin una herramienta que automatice esta comparación, la fiscalización ciudadana es prácticamente inviable. |
+
 ## Stack tecnológico
 
 | Capa | Tecnología |
