@@ -1,10 +1,13 @@
+export const dynamic = 'force-dynamic'
+
 import Link from 'next/link'
 import { MapPin } from 'lucide-react'
-import { MUNICIPIOS } from '@/lib/mock-data'
+import { api } from '@/lib/api'
 import RiskBadge from '@/components/shared/RiskBadge'
 
-export default function MunicipiosPage() {
-  const sorted = [...MUNICIPIOS].sort((a, b) => b.scoreAgregado - a.scoreAgregado)
+export default async function MunicipiosPage() {
+  const municipios = await api.municipios.listar()
+  const sorted = [...municipios].sort((a, b) => b.scoreAgregado - a.scoreAgregado)
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-8">
@@ -14,7 +17,7 @@ export default function MunicipiosPage() {
         </p>
         <h1 className="text-3xl font-extrabold text-navy-800">Municipios y entidades</h1>
         <p className="text-[13px] font-light text-gray-400 mt-1">
-          Entidades ejecutoras de obras públicas con score de riesgo agregado.
+          Entidades ejecutoras de obras públicas.
         </p>
       </div>
 
@@ -27,8 +30,7 @@ export default function MunicipiosPage() {
                   <p className="text-[15px] font-bold text-navy-800">{mun.nombre}</p>
                   <p className="text-[12px] font-light text-gray-400 mt-0.5 flex items-center gap-1.5">
                     <MapPin className="w-3 h-3 text-teal-500" />
-                    {mun.region}, {mun.departamento} &nbsp;·&nbsp;
-                    <span className="font-medium text-gray-500">{mun.obrasIds.length} obra{mun.obrasIds.length !== 1 ? 's' : ''}</span>
+                    {mun.region}, {mun.departamento}
                   </p>
                 </div>
                 <RiskBadge score={mun.scoreAgregado} size="md" />

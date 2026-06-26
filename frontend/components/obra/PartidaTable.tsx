@@ -55,7 +55,7 @@ export default function PartidaTable({ partidas, modoAnalisis }: PartidaTablePro
           </thead>
           <tbody className="divide-y divide-gray-100">
             {slice.map(p => {
-              const hasAlert = p.ratio > 1.3
+              const hasAlert = (p.ratio ?? 0) > 1.3
               return (
                 <tr key={p.id} className={hasAlert ? 'bg-red-50' : 'bg-white hover:bg-gray-50'} style={{ height: 56 }}>
                   <td className="px-3 py-2.5 max-w-0">
@@ -70,11 +70,11 @@ export default function PartidaTable({ partidas, modoAnalisis }: PartidaTablePro
                     </div>
                   </td>
                   <td className="px-3 py-2.5 text-right text-gray-500">{p.unidad}</td>
-                  <td className="px-3 py-2.5 text-right text-gray-600">{p.cantidad.toLocaleString('es-PE')}</td>
-                  <td className="px-3 py-2.5 text-right font-medium text-gray-800">S/ {p.precioDeclarado.toFixed(2)}</td>
-                  <td className="px-3 py-2.5 text-right text-gray-500">S/ {p.precioReferencia.toFixed(2)}</td>
-                  <td className={`px-3 py-2.5 text-right font-bold ${ratioColorClass(p.ratio)}`}>
-                    {p.ratio.toFixed(2)}×
+                  <td className="px-3 py-2.5 text-right text-gray-600">{p.cantidad?.toLocaleString('es-PE') ?? '—'}</td>
+                  <td className="px-3 py-2.5 text-right font-medium text-gray-800">S/ {p.precioDeclarado?.toFixed(2) ?? '—'}</td>
+                  <td className="px-3 py-2.5 text-right text-gray-500">S/ {p.precioReferencia?.toFixed(2) ?? '—'}</td>
+                  <td className={`px-3 py-2.5 text-right font-bold ${ratioColorClass(p.ratio ?? 0)}`}>
+                    {p.ratio?.toFixed(2) ?? '—'}×
                   </td>
                   <td className="px-3 py-2.5 text-center">
                     <SourceTag source={p.fuente} />

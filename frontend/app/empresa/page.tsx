@@ -1,11 +1,14 @@
+export const dynamic = 'force-dynamic'
+
 import Link from 'next/link'
 import { Building2, AlertTriangle } from 'lucide-react'
-import { EMPRESAS } from '@/lib/mock-data'
+import { api } from '@/lib/api'
 import RiskBadge from '@/components/shared/RiskBadge'
 import { formatCurrency } from '@/lib/utils'
 
-export default function EmpresasPage() {
-  const sorted = [...EMPRESAS].sort((a, b) => b.score - a.score)
+export default async function EmpresasPage() {
+  const empresas = await api.empresas.listar()
+  const sorted = [...empresas].sort((a, b) => b.score - a.score)
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-8">
@@ -20,39 +23,29 @@ export default function EmpresasPage() {
       </div>
 
       <div className="space-y-3">
-        {sorted.map(empresa => {
-          const tasaCompletado = empresa.obrasAdjudicadas > 0
-            ? Math.round((empresa.obrasCompletadas / empresa.obrasAdjudicadas) * 100)
-            : 0
-
-          return (
-            <Link key={empresa.id} href={`/empresa/${empresa.id}`}>
-              <div className="bg-white border border-gray-200 rounded-xl p-5 hover:shadow-md transition-shadow cursor-pointer">
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex-1 min-w-0">
-                    <p className="text-[15px] font-bold text-navy-800">{empresa.razonSocial}</p>
-                    <div className="flex flex-wrap gap-3 mt-1.5 text-[12px] font-light text-gray-400">
-                      <span>RUC {empresa.ruc}</span>
-                      <span>·</span>
-                      <span>{empresa.obrasAdjudicadas} obras adjudicadas</span>
-                      <span>·</span>
-                      <span>Completadas: <span className="font-medium text-gray-600">{tasaCompletado}%</span></span>
-                      <span>·</span>
-                      <span>Total: <span className="font-medium text-gray-600">{formatCurrency(empresa.montoTotalAdjudicado)}</span></span>
-                    </div>
-                    {empresa.alertas.length > 0 && (
-                      <div className="mt-2 flex items-center gap-1.5 text-[11px] font-medium text-amber-600">
-                        <AlertTriangle className="w-3 h-3" />
-                        {empresa.alertas.length} alerta{empresa.alertas.length > 1 ? 's' : ''} detectada{empresa.alertas.length > 1 ? 's' : ''}
-                      </div>
-                    )}
+        {sorted.map(empresa => (
+          <Link key={empresa.id} href={`/empresa/${empresa.id}`}>
+            <div className="bg-white border border-gray-200 rounded-xl p-5 hover:shadow-md transition-shadow cursor-pointer">
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex-1 min-w-0">
+                  <p className="text-[15px] font-bold text-navy-800">{empresa.razonSocial}</p>
+                  <div className="flex flex-wrap gap-3 mt-1.5 text-[12px] font-light text-gray-400">
+                    <span>RUC {empresa.ruc}</span>
+                    <span>·</span>
+                    <span>{empresa.obrasAdjudicadas} obras adjudicadas</span>
                   </div>
-                  <RiskBadge score={empresa.score} size="md" />
+                  {empresa.alertas.length > 0 && (
+                    <div className="mt-2 flex items-center gap-1.5 text-[11px] font-medium text-amber-600">
+                      <AlertTriangle className="w-3 h-3" />
+                      {empresa.alertas.length} alerta{empresa.alertas.length > 1 ? 's' : ''} detectada{empresa.alertas.length > 1 ? 's' : ''}
+                    </div>
+                  )}
                 </div>
+                <RiskBadge score={empresa.score} size="md" />
               </div>
-            </Link>
-          )
-        })}
+            </div>
+          </Link>
+        ))}
       </div>
     </div>
   )

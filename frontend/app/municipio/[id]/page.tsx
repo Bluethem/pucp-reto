@@ -1,13 +1,10 @@
+export const dynamic = 'force-dynamic'
+
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import {
-  ArrowLeft, Building2, User, AlertTriangle, MapPin
-} from 'lucide-react'
-import {
-  getMunicipioById,
-  getAutoridadesByMunicipio,
-  getObrasByMunicipio,
-} from '@/lib/mock-data'
+import { ArrowLeft, Building2, User, AlertTriangle, MapPin } from 'lucide-react'
+import { api } from '@/lib/api'
+import { getObraById } from '@/lib/mock-data'
 import RiskBadge from '@/components/shared/RiskBadge'
 import Disclaimer from '@/components/shared/Disclaimer'
 import { formatCurrency } from '@/lib/utils'
@@ -25,27 +22,26 @@ const ESTADO_STYLE: Record<string, string> = {
 
 export default async function MunicipioPage({ params }: Props) {
   const { id } = await params
-  const municipio = getMunicipioById(id)
+  let municipio
+  try {
+    municipio = await api.municipios.obtener(id)
+  } catch {
+    notFound()
+  }
   if (!municipio) notFound()
 
-  const autoridades = getAutoridadesByMunicipio(municipio.id)
-  const obras = getObrasByMunicipio(municipio.id)
+  let obras: any[] = []
+  try { obras = await api.municipios.obras(id) } catch {}
 
-  const alcalde = autoridades.find(a => a.cargo === 'Alcalde')
-  const regidores = autoridades.filter(a => a.cargo === 'Regidor')
-  const totalPpto = obras.reduce((s, o) => s + o.presupuestoTotal, 0)
-  const obrasRiesgoAlto = obras.filter(o => o.score >= 4).length
+  const totalPpto = obras.reduce((s: number, o: any) => s + (o.presupuestoTotal || 0), 0)
+  const obrasRiesgoAlto = obras.filter((o: any) => o.score >= 61).length
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-6">
-      <Link
-        href="/"
-        className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-navy-800 mb-5 transition-colors"
-      >
+      <Link href="/" className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-navy-800 mb-5 transition-colors">
         <ArrowLeft className="w-4 h-4" /> Volver al mapa
       </Link>
 
-      {/* Header */}
       <div className="bg-white border border-gray-200 rounded-2xl p-6 mb-5 shadow-sm">
         <div className="flex items-start gap-4">
           <div className="w-14 h-14 rounded-xl bg-navy-800 flex items-center justify-center shrink-0">
@@ -83,77 +79,28 @@ export default async function MunicipioPage({ params }: Props) {
           </div>
           <div>
             <p className="text-xs text-gray-400 uppercase tracking-wide">Autoridades</p>
-            <p className="text-xl font-bold text-navy-800">{autoridades.length}</p>
+            <p className="text-xl font-bold text-navy-800">—</p>
           </div>
         </div>
       </div>
 
       <div className="grid md:grid-cols-3 gap-5">
-        {/* Autoridades */}
-        <div>
-          <h2 className="text-base font-semibold text-navy-800 mb-3 flex items-center gap-2">
-            <User className="w-4 h-4 text-teal-600" /> Autoridades
-          </h2>
-          <div className="space-y-3">
-            {autoridades.length === 0 && (
-              <p className="text-sm text-gray-400">Sin datos de autoridades disponibles.</p>
-            )}
-            {alcalde && (
-              <Link href={`/autoridad/${alcalde.id}`}>
-                <div className="bg-white border border-teal-200 rounded-xl p-4 hover:shadow-md transition-shadow cursor-pointer">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-navy-100 flex items-center justify-center">
-                      <User className="w-5 h-5 text-navy-600" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-semibold text-navy-800">{alcalde.nombre}</p>
-                      <p className="text-xs text-teal-600 font-medium">{alcalde.cargo}</p>
-                      <p className="text-xs text-gray-400">{alcalde.partido} · {alcalde.periodo}</p>
-                    </div>
-                  </div>
-                  {alcalde.procesos.length > 0 && (
-                    <div className="mt-2 flex items-center gap-1.5 text-xs text-red-600 bg-red-50 rounded-lg px-2.5 py-1.5">
-                      <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
-                      {alcalde.procesos.length} proceso(s) registrado(s) — JNE / PJ
-                    </div>
-                  )}
-                </div>
-              </Link>
-            )}
-            {regidores.map(r => (
-              <Link key={r.id} href={`/autoridad/${r.id}`}>
-                <div className="bg-white border border-gray-200 rounded-xl p-4 hover:shadow-md transition-shadow cursor-pointer">
-                  <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center">
-                      <User className="w-4 h-4 text-gray-500" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-gray-800">{r.nombre}</p>
-                      <p className="text-xs text-gray-500">{r.cargo} · {r.partido}</p>
-                    </div>
-                  </div>
-                </div>
-              </Link>
-            ))}
-          </div>
-        </div>
-
-        {/* Obras */}
-        <div className="md:col-span-2">
+        <div className="md:col-span-3">
           <h2 className="text-base font-semibold text-navy-800 mb-3 flex items-center gap-2">
             <Building2 className="w-4 h-4 text-teal-600" /> Obras bajo esta entidad
           </h2>
           <div className="space-y-3">
-            {obras.map(obra => (
+            {obras.length === 0 && (
+              <p className="text-sm text-gray-400">Sin obras registradas en el sistema.</p>
+            )}
+            {obras.map((obra: any) => (
               <Link key={obra.id} href={`/obra/${obra.id}`}>
                 <div className="bg-white border border-gray-200 rounded-xl p-4 hover:shadow-md transition-shadow cursor-pointer">
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-navy-800 leading-snug">
-                        {obra.titulo}
-                      </p>
+                      <p className="text-sm font-semibold text-navy-800 leading-snug">{obra.titulo}</p>
                       <div className="flex flex-wrap gap-1.5 mt-1.5">
-                        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${ESTADO_STYLE[obra.estado]}`}>
+                        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${ESTADO_STYLE[obra.estado] || 'bg-gray-100 text-gray-600'}`}>
                           {obra.estado}
                         </span>
                         <span className="text-xs px-2 py-0.5 rounded-full font-medium bg-gray-100 text-gray-600">
@@ -163,7 +110,7 @@ export default async function MunicipioPage({ params }: Props) {
                     </div>
                     <div className="shrink-0 text-right">
                       <RiskBadge score={obra.score} size="sm" showLabel={false} />
-                      <p className="text-xs text-gray-400 mt-1">{formatCurrency(obra.presupuestoTotal)}</p>
+                      <p className="text-xs text-gray-400 mt-1">{obra.presupuestoTotal ? formatCurrency(obra.presupuestoTotal) : '—'}</p>
                     </div>
                   </div>
                 </div>

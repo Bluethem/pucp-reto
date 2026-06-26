@@ -1,4 +1,4 @@
-import { cn } from '@/lib/utils'
+import { cn, riskColor, riskLabel } from '@/lib/utils'
 import type { RiskLevel } from '@/types'
 
 interface RiskBadgeProps {
@@ -7,19 +7,15 @@ interface RiskBadgeProps {
   showLabel?: boolean
 }
 
-const SCORE_CONFIG: Record<
-  RiskLevel,
-  { label: string; bg: string; text: string; border: string; dot: string }
-> = {
-  1: { label: 'Riesgo Bajo', bg: 'bg-green-50', text: 'text-green-700', border: 'border-green-200', dot: 'bg-green-500' },
-  2: { label: 'Riesgo Bajo', bg: 'bg-green-50', text: 'text-green-700', border: 'border-green-200', dot: 'bg-green-500' },
-  3: { label: 'Riesgo Medio', bg: 'bg-yellow-50', text: 'text-yellow-700', border: 'border-yellow-200', dot: 'bg-yellow-500' },
-  4: { label: 'Riesgo Alto', bg: 'bg-red-50', text: 'text-red-700', border: 'border-red-200', dot: 'bg-red-500' },
-  5: { label: 'Riesgo Alto', bg: 'bg-red-50', text: 'text-red-700', border: 'border-red-200', dot: 'bg-red-500' },
+const COLORS = {
+  green: { bg: 'bg-green-50', text: 'text-green-700', border: 'border-green-200', dot: 'bg-green-500' },
+  yellow: { bg: 'bg-yellow-50', text: 'text-yellow-700', border: 'border-yellow-200', dot: 'bg-yellow-500' },
+  red: { bg: 'bg-red-50', text: 'text-red-700', border: 'border-red-200', dot: 'bg-red-500' },
 }
 
 export default function RiskBadge({ score, size = 'md', showLabel = true }: RiskBadgeProps) {
-  const cfg = SCORE_CONFIG[score]
+  const color = riskColor(score)
+  const cfg = COLORS[color]
 
   const sizeClass = {
     sm: 'text-[11px] px-2 py-0.5 gap-1',
@@ -42,9 +38,9 @@ export default function RiskBadge({ score, size = 'md', showLabel = true }: Risk
     >
       <span className={cn('rounded-full shrink-0', dotSize, cfg.dot)} />
       {showLabel ? (
-        <span>{cfg.label}</span>
+        <span>{riskLabel(score)}</span>
       ) : (
-        <span>{score * 20}/100</span>
+        <span>{score}/100</span>
       )}
     </span>
   )

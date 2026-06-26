@@ -1,12 +1,6 @@
-export type RiskLevel = 1 | 2 | 3 | 4 | 5
+export type RiskLevel = number // 0–100
 
 export type RiskColor = 'green' | 'yellow' | 'red'
-
-export function riskColor(score: RiskLevel): RiskColor {
-  if (score <= 2) return 'green'
-  if (score === 3) return 'yellow'
-  return 'red'
-}
 
 export interface Partida {
   id: string
@@ -14,8 +8,8 @@ export interface Partida {
   unidad: string
   cantidad: number
   precioDeclarado: number
-  precioReferencia: number
-  ratio: number
+  precioReferencia: number | null
+  ratio: number | null
   fuente: string
 }
 
@@ -23,7 +17,7 @@ export interface Obra {
   id: string
   titulo: string
   tipo: string
-  estado: 'En ejecución' | 'Concluida' | 'Paralizada' | 'Por ejecutar'
+  estado: string
   region: string
   departamento: string
   lat: number
@@ -78,9 +72,9 @@ export interface Municipio {
   nombre: string
   region: string
   departamento: string
-  alcaldeId: string
-  regidoresIds: string[]
-  obrasIds: string[]
+  alcaldeId?: string
+  regidoresIds?: string[]
+  obrasIds?: string[]
   scoreAgregado: RiskLevel
 }
 
