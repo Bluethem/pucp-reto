@@ -23,4 +23,4 @@ class Comentario(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     usuario = relationship("Usuario", back_populates="comentarios")
-    respuestas = relationship("Comentario", backref="padre", remote_side=[id], cascade="all, delete-orphan")
+    respuestas = relationship("Comentario", backref="padre", remote_side=[id])

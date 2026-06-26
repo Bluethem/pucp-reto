@@ -4,20 +4,31 @@ API REST de Glass: lógica de negocio, scoring, autenticación y orquestación d
 fuentes de datos. Stack según [ADR-003](../docs/adr/adr.md): **FastAPI + SQLAlchemy +
 PostgreSQL/PostGIS + Redis + APScheduler**.
 
-> Estado: **inicialización**. Solo expone endpoints de salud. Los routers de negocio
-> se irán agregando por módulo.
+> Estado: **implementación completa**. 8 módulos funcionando: Obras, Scoring, Auth,
+> Municipios, Autoridades, Empresas, Comentarios, Suscripciones, Admin.
 
 ## Estructura
 
 ```
 backend/
 ├── app/
-│   ├── main.py            # Entrypoint FastAPI + CORS + routers
+│   ├── main.py              # Entrypoint FastAPI + CORS + 10 routers
 │   ├── core/
-│   │   ├── config.py      # Configuración por variables de entorno (ADR-009)
-│   │   └── database.py    # Engine + sesión SQLAlchemy (ADR-006)
-│   └── api/
-│       └── health.py      # /health y /health/db
+│   │   ├── config.py        # Configuración por variables de entorno (ADR-009)
+│   │   ├── database.py      # Engine + sesión SQLAlchemy (ADR-006)
+│   │   ├── response.py      # Envelope uniforme {data, error}
+│   │   └── utils.py         # Helpers: uuid, clasificación de riesgo
+│   ├── api/
+│   │   └── health.py        # /health y /health/db
+│   ├── models/              # 10 modelos ORM (SQLAlchemy)
+│   ├── schemas/             # 9 módulos Pydantic (request/response)
+│   ├── routers/             # 10 routers FastAPI
+│   ├── services/            # 8 servicios con lógica de negocio
+│   ├── datasource/          # 5 fuentes (INEI, Gemini, Mock, Mvivienda)
+│   └── tests/               # 55 tests (pytest)
+├── alembic/                 # Migraciones de base de datos
+├── docker-compose.yml       # PostgreSQL + API
+├── Dockerfile
 ├── requirements.txt
 ├── .env.example
 └── .gitignore

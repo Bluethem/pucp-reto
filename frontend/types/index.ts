@@ -40,6 +40,7 @@ export interface Obra {
   fechaFin: string
   infobrasUrl?: string
   seaceUrl?: string
+  expedientePdfUrl?: string
   modoAnalisis: 'partidas' | 'fallback_m2'
 }
 

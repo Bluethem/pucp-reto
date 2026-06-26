@@ -19,6 +19,7 @@ from typing import Optional
 
 from sqlalchemy.orm import Session
 
+from app.datasource.mvivienda import FACTORES_REGIONALES, MviviendaDataSource
 from app.models.obra import Obra
 from app.models.partida import PartidaObra
 from app.models.precio_referencia import PrecioReferencia
@@ -47,6 +48,8 @@ class ResultadoPartida:
         self.fuente = fuente
         self.departamento = departamento
         self.factor_regional = factor_regional
+        self.comparable = precio_referencia is not None
+        self.es_alerta = bool(ratio and ratio >= UMBRAL_ALERTA)
 
     def to_dict(self) -> dict:
         return {
@@ -59,8 +62,8 @@ class ResultadoPartida:
             "fuente": self.fuente,
             "departamento": self.departamento,
             "factor_regional": self.factor_regional,
-            "es_alerta": bool(self.ratio and self.ratio >= UMBRAL_ALERTA),
-            "comparable": self.precio_referencia is not None,
+            "es_alerta": self.es_alerta,
+            "comparable": self.comparable,
         }
 
 
@@ -152,9 +155,6 @@ class ScoringService:
         total_ponderado = Decimal("0")
         peso_total = Decimal("0")
 
-        # Factores regionales para contexto visual
-        from app.datasource.mvivienda import FACTORES_REGIONALES
-
         for partida in partidas:
             precio_ref, fuente, dpto_usado = self.obtener_precio_referencia(
                 partida.codigo_inei, departamento if partida.codigo_inei else None,
@@ -200,12 +200,17 @@ class ScoringService:
 
     def _score_fallback(self, obra: Obra) -> ResultadoScore:
         """Fallback RF-SCO-08: comparación por costo/m²."""
-        from app.datasource.mvivienda import MviviendaDataSource, FACTORES_REGIONALES
-
-        mvivienda = MviviendaDataSource()
-        costo_m2_referencia = mvivienda.obtener_costo_m2(
-            obra.tipo_obra, obra.departamento or "Lima",
+        costo_m2_referencia = (
+            self.db.query(PrecioReferencia)
+            .filter(
+                PrecioReferencia.fuente == "mvivienda",
+                PrecioReferencia.departamento == (obra.departamento or "Lima"),
+                PrecioReferencia.insumo.ilike(f"%{obra.tipo_obra}%"),
+            )
+            .order_by(PrecioReferencia.anio.desc(), PrecioReferencia.mes.desc())
+            .first()
         )
+        costo_m2_precio = costo_m2_referencia.precio if costo_m2_referencia else None
 
         resultado_partida = ResultadoPartida(
             insumo=f"Costo total por m² ({obra.tipo_obra})",
@@ -216,13 +221,13 @@ class ScoringService:
                 if obra.metrado_total and obra.metrado_total > 0
                 else None
             ),
-            precio_referencia=costo_m2_referencia,
+            precio_referencia=costo_m2_precio,
             ratio=(
-                (obra.presupuesto_total / obra.metrado_total) / costo_m2_referencia
-                if obra.metrado_total and obra.metrado_total > 0 and costo_m2_referencia
+                (obra.presupuesto_total / obra.metrado_total) / costo_m2_precio
+                if obra.metrado_total and obra.metrado_total > 0 and costo_m2_precio
                 else None
             ),
-            fuente="mvivienda" if costo_m2_referencia else "no_disponible",
+            fuente="mvivienda" if costo_m2_precio else "no_disponible",
             departamento=obra.departamento,
             factor_regional=FACTORES_REGIONALES.get(obra.departamento or "", 1.0),
         )

@@ -8,6 +8,7 @@ from app.core.response import envelope
 from app.models.usuario import Usuario
 from app.schemas.admin import (
     ComentarioReportadoResponse,
+    SaludFuentesResponse,
     UsuarioAdminResponse,
 )
 from app.services import admin_service
@@ -21,7 +22,8 @@ def salud_fuentes(
     db: Session = Depends(get_db),
     _admin: Usuario = Depends(get_current_admin),
 ):
-    return envelope({"fuentes": admin_service.salud_fuentes(db)})
+    data = SaludFuentesResponse(fuentes=admin_service.salud_fuentes(db))
+    return envelope(data.model_dump())
 
 
 @router.get("/comentarios-reportados")

@@ -57,7 +57,7 @@ def test_get_me_sin_token(client, db_session):
     assert resp.status_code == 401
 
 
-def test_get_me_con_token(client, db_session, headers_usuario):
+def test_get_me_con_token(client, db_session, headers_usuario, usuario_normal):
     resp = client.get("/api/v1/auth/me", headers=headers_usuario)
     assert resp.status_code == 200
-    assert resp.json()["data"]["email"] == "user@test.com"
+    assert resp.json()["data"]["email"] == usuario_normal.email

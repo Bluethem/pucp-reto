@@ -1,25 +1,41 @@
 import uuid
+from datetime import datetime
 
 import pytest
 from fastapi.testclient import TestClient
+from sqlalchemy import create_engine, text
+from sqlalchemy.orm import sessionmaker
 
+from app.core.database import Base, get_db
 from app.main import app
-from app.core.database import Base, engine, SessionLocal
+from app.core.config import settings
+
+TEST_DATABASE_URL = settings.database_url.rsplit("/", 1)[0] + "/glass_test"
+
+test_engine = create_engine(TEST_DATABASE_URL)
+TestSessionLocal = sessionmaker(bind=test_engine, autocommit=False, autoflush=False)
+
+Base.metadata.drop_all(bind=test_engine)
+Base.metadata.create_all(bind=test_engine)
 
 
 @pytest.fixture(scope="function")
 def db_session():
-    Base.metadata.create_all(bind=engine)
-    session = SessionLocal()
-    try:
+    session = TestSessionLocal()
+
+    def override_get_db():
         yield session
-    finally:
-        session.close()
-    Base.metadata.drop_all(bind=engine)
+
+    app.dependency_overrides[get_db] = override_get_db
+
+    yield session
+
+    app.dependency_overrides.clear()
+    session.close()
 
 
 @pytest.fixture(scope="function")
-def client():
+def client(db_session):
     with TestClient(app) as c:
         yield c
 
@@ -31,15 +47,15 @@ def usuario_normal(db_session):
     from app.models.usuario import Usuario
     from app.services.auth_service import hash_password
 
+    uid = uuid.uuid4().hex[:8]
     usuario = Usuario(
-        email="user@test.com",
+        email=f"user-{uid}@test.com",
         password_hash=hash_password("password123"),
-        alias="user",
+        alias=f"user-{uid}",
         rol="registrado",
     )
     db_session.add(usuario)
     db_session.commit()
-    db_session.refresh(usuario)
     return usuario
 
 
@@ -48,15 +64,15 @@ def usuario_admin(db_session):
     from app.models.usuario import Usuario
     from app.services.auth_service import hash_password
 
+    uid = uuid.uuid4().hex[:8]
     usuario = Usuario(
-        email="admin@test.com",
+        email=f"admin-{uid}@test.com",
         password_hash=hash_password("password123"),
-        alias="admin",
+        alias=f"admin-{uid}",
         rol="administrador",
     )
     db_session.add(usuario)
     db_session.commit()
-    db_session.refresh(usuario)
     return usuario
 
 
@@ -97,7 +113,6 @@ def crear_obra(db_session):
         obra = Obra(**datos)
         db_session.add(obra)
         db_session.commit()
-        db_session.refresh(obra)
         return obra
 
     return _crear
