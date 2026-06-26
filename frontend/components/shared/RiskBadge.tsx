@@ -42,9 +42,9 @@ export default function RiskBadge({ score, size = 'md', showLabel = true }: Risk
     >
       <span className={cn('rounded-full shrink-0', dotSize, cfg.dot)} />
       {showLabel ? (
-        <span>{cfg.label} — {score}/5</span>
+        <span>{cfg.label}</span>
       ) : (
-        <span>{score}/5</span>
+        <span>{score * 20}/100</span>
       )}
     </span>
   )
